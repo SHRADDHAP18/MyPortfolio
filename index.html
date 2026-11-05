@@ -635,14 +635,18 @@ const CORPUS = [
     "Python Flask JavaScript Chrome extension manifest deceptive UI patterns ecommerce precision REST CORS frontend backend communication latency web scraping detection" },
   { id:'jobportal', label:'Job Portal Application', text:
     "SQL MongoDB Node.js React data modelling dual schema architecture structured job listings candidate profiles filtering ranking mock records multi source data integration unified query layer relational document stores" },
+  { id:'frontend', label:'Frontend & UI work', text:
+    "React TypeScript JavaScript Vite TailwindCSS frontend UI user interface components dashboard web application Chrome extension popup Manifest V3 REST API integration client state React components Python backend integration Git Postman Agile Scrum" },
+  { id:'education', label:'Education — MCA & BCA', text:
+    "Master of Computer Applications MCA Bachelor of Computer Applications BCA computer science data science analytics RV Institute of Technology Management Surana College software engineer" },
   { id:'edutainer', label:'Junior Software Developer Intern — Edutainer', text:
-    "React cybersecurity network architecture software development practices frontend components internship capstone" },
+    "React cybersecurity network architecture software development practices frontend UI components client state REST API integration internship capstone" },
   { id:'ibm', label:'IBM SkillsBuild AI + Cloud Internship', text:
     "IBM enterprise grade AI cloud AI tooling data classification workflow certification" },
   { id:'iot', label:'IoT Internship', text:
     "IoT sensors Arduino IDE real time weather monitoring system data collection sensor integration live data processing embedded" },
   { id:'skills', label:'Core stack', text:
-    "Python JavaScript Java C FastAPI Node.js Flask REST APIs CORS uvicorn React TypeScript Vite TailwindCSS SQL MongoDB Power BI Git VSCode Postman scikit learn pandas NumPy NLP TF-IDF IsolationForest feature engineering anomaly detection HuggingFace transformers prompt engineering agentic Agile Scrum full stack backend frontend web development software engineer" }
+    "Python JavaScript Java C FastAPI Node.js Flask REST APIs CORS uvicorn React TypeScript Vite TailwindCSS SQL MongoDB Power BI Git VSCode Postman scikit learn pandas NumPy NLP TF-IDF IsolationForest feature engineering anomaly detection HuggingFace transformers prompt engineering agentic Agile Scrum full stack backend frontend web development software engineer design develop build ship deploy web applications services user facing features collaborate problem solving" }
 ];
 
 const docsTokens = CORPUS.map(d => tokenize(d.text));
@@ -706,10 +710,15 @@ function runMatch(){
   // in absolute terms) — it's a precision metric, not a percentage a recruiter should read literally.
   // This curve remaps it onto a scale where the *relative* strength reads intuitively:
   // a floor so weak overlap doesn't look like zero, and a steep rise so real matches land 75-95%.
-  const K = 5.4; // controls how quickly the curve climbs
+  const K = 6.0; // controls how quickly the curve climbs
   const FLOOR = 15;
   const shaped = 1 - Math.exp(-K * score);
-  const displayScore = Math.min(100, Math.round(FLOOR + (100 - FLOOR) * shaped));
+  // Role-focus weighting: my target roles are UI / frontend. When a JD is dominated by
+  // frontend vocabulary, add a bonus (up to +10) on top of the similarity score.
+  const FRONTEND_TERMS = new Set(['react','typescript','javascript','ui','frontend','interface','interfaces','component','components','vite','tailwindcss','tailwind','css','html','ux','responsive','dashboard','dashboards']);
+  const feShare = jdTokens.length ? jdTokens.filter(t => FRONTEND_TERMS.has(t)).length / jdTokens.length : 0;
+  const feBonus = Math.round(Math.max(0, Math.min(1, (feShare - 0.10) / 0.12)) * 10);
+  const displayScore = Math.min(100, Math.round(FLOOR + (100 - FLOOR) * shaped) + feBonus);
 
   // per-doc scores
   const perDoc = CORPUS.map((d,i)=>({
